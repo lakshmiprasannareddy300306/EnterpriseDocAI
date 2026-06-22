@@ -1,7 +1,14 @@
 import chromadb
-from langchain_ollama import OllamaLLM
 from fastapi import FastAPI, UploadFile, File
+from groq import Groq
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+
+client_groq = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
 
 app = FastAPI()
 
@@ -26,6 +33,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         "status": "success",
         "filename": file.filename
     }
+
 @app.post("/query")
 async def query_document(question: str):
 
@@ -46,10 +54,6 @@ async def query_document(question: str):
         results["documents"][0]
     )
 
-    llm = OllamaLLM(
-        model="llama3"
-    )
-
     prompt = f"""
 Answer using ONLY the context below.
 
@@ -60,7 +64,17 @@ Question:
 {question}
 """
 
-    answer = llm.invoke(prompt)
+    response = client_groq.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
+
+    answer = response.choices[0].message.content
 
     return {
         "question": question,
