@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 chroma_store/
 uploads/
+.env
+backend/.env
+venv/
+__pycache__/
